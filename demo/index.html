@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>fan-card demo</title>
+  <script src="../dist/fan-card.js"></script>
+  <style>
+    body { background: #f0f0f0; font-family: sans-serif; padding: 24px; }
+    fan-card { max-width: 800px; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <script>
+    window.networkLogs = [];
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      window.networkLogs.push({ type: 'fetch', args });
+      return originalFetch(...args);
+    };
+  </script>
+  <h1>fan-card demo</h1>
+  <fan-card id="demo"></fan-card>
+
+  <script>
+    const hass = {
+      states: {
+        "sensor.onlyfans_e86bead8_fan0_tacho": { state: "1200" },
+        "sensor.onlyfans_e86bead8_fan1_tacho": { state: "1100" },
+        "sensor.onlyfans_e86bead8_fan2_tacho": { state: "1000" },
+        "sensor.onlyfans_e86bead8_fan3_tacho": { state: "900" },
+        "sensor.onlyfans_e86bead8_fan4_tacho": { state: "800" },
+        "sensor.onlyfans_e86bead8_fan5_tacho": { state: "700" },
+        "sensor.onlyfans_e86bead8_fan6_tacho": { state: "600" },
+        "sensor.onlyfans_e86bead8_fan7_tacho": { state: "500" },
+        "binary_sensor.onlyfans_e86bead8_fan2_problem": { state: "on" },
+        "binary_sensor.onlyfans_e86bead8_fan5_problem": { state: "on" },
+      },
+    };
+
+    const card = document.querySelector("fan-card");
+    card.setConfig({
+      fans: [
+        { entity: "sensor.onlyfans_e86bead8_fan0_tacho", name: "Fan 0" },
+        { entity: "sensor.onlyfans_e86bead8_fan1_tacho", name: "Fan 1" },
+        { entity: "sensor.onlyfans_e86bead8_fan2_tacho", name: "Fan 2 (problem)", problem_entity: "binary_sensor.onlyfans_e86bead8_fan2_problem" },
+        { entity: "sensor.onlyfans_e86bead8_fan3_tacho", name: "Fan 3" },
+        { entity: "sensor.onlyfans_e86bead8_fan4_tacho", name: "Fan 4" },
+        { entity: "sensor.onlyfans_e86bead8_fan5_tacho", name: "Fan 5 (problem)", problem_entity: "binary_sensor.onlyfans_e86bead8_fan5_problem" },
+        { entity: "sensor.onlyfans_e86bead8_fan6_tacho", name: "Fan 6" },
+        { entity: "sensor.onlyfans_e86bead8_fan7_tacho", name: "Fan 7" },
+      ],
+      fans_per_row: 4,
+      speed_scale: 0.5,
+    });
+    card.hass = hass;
+
+    // Simulate live updates
+    setInterval(() => {
+      const hz = 500 + Math.floor(Math.random() * 1000);
+      const fanIdx = Math.floor(Math.random() * 8);
+      const entity = `sensor.onlyfans_e86bead8_fan${fanIdx}_tacho`;
+      hass.states[entity].state = hz.toString();
+      card.hass = { ...hass }; // trigger update
+    }, 1000);
+  </script>
+</body>
+</html>

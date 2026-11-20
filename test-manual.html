@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Fan Card — Manual Test</title>
+  <script src="dist/fan-card.js?v=12"></script>
+  <style>
+    body { background: #f0f0f0; font-family: sans-serif; padding: 24px; color: #333; }
+    fan-card { max-width: 820px; margin: 0 auto; display: block; }
+    .ver { color: #888; font-size: 12px; margin-bottom: 8px; }
+    .controls { max-width: 820px; margin: 0 auto 16px; background: #fff; border-radius: 8px;
+                padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+    .controls label { font-size: 13px; font-weight: 600; }
+    .controls .row { display: flex; align-items: center; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+    .controls input[type=range] { flex: 1; min-width: 200px; }
+    .controls .val { font-variant-numeric: tabular-nums; font-weight: 600; width: 130px; }
+    #errbanner { display:none; position:fixed; bottom:0; left:0; right:0; background:#c62828; color:#fff;
+                 font:12px monospace; padding:8px; max-height:40vh; overflow:auto; white-space:pre-wrap; z-index:99; }
+  </style>
+</head>
+<body>
+  <h1>Fan Card — Manual Test</h1>
+  <div class="ver">bundle v11 · realistic 0–24 Hz fan speeds</div>
+  <div id="errbanner"></div>
+
+  <div class="controls">
+    <label for="speed">Visual speed factor</label>
+    <div class="row">
+      <span style="opacity:.5">0 · real-time 24 Hz</span>
+      <input type="range" id="speed" min="0" max="1" step="0.01" value="0.15">
+      <span style="opacity:.5">1×</span>
+      <span class="val" id="speedval">0.15× — 24 Hz → ~3.6 rot/s</span>
+    </div>
+    <div style="font-size:12px;color:#777;margin-top:8px">
+      At 1× the ~24 Hz real speed blades blur together. Use 0.1×–0.2× to see individual blades clearly.
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener("error", (e) => {
+      const msg = (e.message || e.error) + "\n" + ((e.error && e.error.stack) || "");
+      document.title = "ERR: " + (e.error && e.error.message ? e.error.message : (e.message || e.type));
+      const b = document.getElementById("errbanner");
+      b.style.display = "block";
+      b.textContent += "[" + new Date().toISOString() + "] " + msg + "\n\n";
+    });
+  </script>
+
+  <script>
+    // Realistic 0–24 Hz spread. Two fans idle (0 Hz), two at low RPM,
+    // the rest ascending up to 24 Hz. Real max is 24 Hz.
+    const fanHz = [0, 0, 3.5, 8, 12, 16, 20, 24];
+    const hass = {
+      states: {
+        "sensor.onlyfans_e86bead8_fan0_tacho": { state: "0" },
+        "sensor.onlyfans_e86bead8_fan1_tacho": { state: "0" },
+        "sensor.onlyfans_e86bead8_fan2_tacho": { state: "3.5" },
+        "sensor.onlyfans_e86bead8_fan3_tacho": { state: "8" },
+        "sensor.onlyfans_e86bead8_fan4_tacho": { state: "12" },
+        "sensor.onlyfans_e86bead8_fan5_tacho": { state: "16" },
+        "sensor.onlyfans_e86bead8_fan6_tacho": { state: "20" },
+        "sensor.onlyfans_e86bead8_fan7_tacho": { state: "24" },
+        "binary_sensor.onlyfans_e86bead8_fan2_problem": { state: "on" },
+        "binary_sensor.onlyfans_e86bead8_fan5_problem": { state: "on" },
+      },
+    };
+
+    const card = document.createElement("fan-card");
+    card.setConfig({
+      fans: [
+        { entity: "sensor.onlyfans_e86bead8_fan0_tacho", name: "Fan 0 · idle" },
+        { entity: "sensor.onlyfans_e86bead8_fan1_tacho", name: "Fan 1 · idle" },
+        { entity: "sensor.onlyfans_e86bead8_fan2_tacho", name: "Fan 2 · problem", problem_entity: "binary_sensor.onlyfans_e86bead8_fan2_problem" },
+        { entity: "sensor.onlyfans_e86bead8_fan3_tacho", name: "Fan 3" },
+        { entity: "sensor.onlyfans_e86bead8_fan4_tacho", name: "Fan 4" },
+        { entity: "sensor.onlyfans_e86bead8_fan5_tacho", name: "Fan 5 · problem", problem_entity: "binary_sensor.onlyfans_e86bead8_fan5_problem" },
+        { entity: "sensor.onlyfans_e86bead8_fan6_tacho", name: "Fan 6" },
+        { entity: "sensor.onlyfans_e86bead8_fan7_tacho", name: "Fan 7" },
+      ],
+      fans_per_row: 4,
+      speed_scale: 0.08,
+    });
+    document.body.appendChild(card);
+    card.hass = hass;
+
+    // Live speed-factor slider
+    const slider = document.getElementById("speed");
+    const valEl = document.getElementById("speedval");
+    function applySpeed() {
+      const scale = parseFloat(slider.value);
+      card.setSpeedScale(scale);
+      const rotAt24 = (24 * scale).toFixed(1);
+      valEl.textContent = `${scale.toFixed(2)}× — 24 Hz → ${rotAt24} rot/s`;
+    }
+    slider.addEventListener("input", applySpeed);
+    applySpeed();
+
+    // Simulate small live fluctuations around each fan's base speed
+    setInterval(() => {
+      const fanIdx = Math.floor(Math.random() * 8);
+      const base = fanHz[fanIdx];
+      const delta = base > 0 ? ((Math.random() - 0.5) * 2) : 0;
+      const v = Math.max(0, Math.round((base + delta) * 10) / 10);
+      const entity = `sensor.onlyfans_e86bead8_fan${fanIdx}_tacho`;
+      hass.states[entity].state = v.toString();
+      card.hass = { ...hass };
+    }, 1500);
+
+    // ---- Config editor smoke test ----
+    // Outside HA there is no <ha-entity-picker>; provide a minimal mock so the
+    // editor can be exercised. In real HA the dashboard supplies it.
+    if (!customElements.get("ha-entity-picker")) {
+      customElements.define("ha-entity-picker", class extends HTMLElement {
+        set hass(h) { this._hass = h; this._render(); }
+        get hass() { return this._hass; }
+        set includeDomains(d) { this._domains = d || []; this._render(); }
+        set value(v) { this._value = v || ""; this._render(); }
+        get value() { return this._value || ""; }
+        _render() {
+          if (!this._hass || !this._hass.states) return;
+          const ids = Object.keys(this._hass.states).filter((k) =>
+            !this._domains || this._domains.length === 0
+              ? true
+              : this._domains.includes(k.split(".")[0])
+          );
+          this.innerHTML =
+            `<select style="width:100%;box-sizing:border-box;font:inherit;padding:6px;border-radius:6px;border:1px solid #ccc">` +
+            `<option value="">— none —</option>` +
+            ids.map((k) => `<option value="${k}" ${k === this._value ? "selected" : ""}>${k}</option>`).join("") +
+            `</select>`;
+          this.querySelector("select").onchange = (e) =>
+            this.dispatchEvent(new CustomEvent("value-changed", { detail: { value: e.target.value || undefined } }));
+        }
+      });
+    }
+
+    const editorBtn = document.createElement("button");
+    editorBtn.textContent = "Open config editor (smoke test)";
+    editorBtn.id = "editorbtn";
+    Object.assign(editorBtn.style, { marginTop: "10px", padding: "8px 12px", borderRadius: "6px", border: "1px solid #ccc", background: "#fff", cursor: "pointer", font: "inherit" });
+    document.querySelector(".controls").appendChild(editorBtn);
+
+    editorBtn.addEventListener("click", () => {
+      if (document.querySelector("fan-card-editor")) {
+        document.querySelector("fan-card-editor").remove();
+        return;
+      }
+      const editor = document.createElement("fan-card-editor");
+      editor.hass = hass;
+      editor.setConfig(card.config);
+      editor.addEventListener("config-changed", (e) => {
+        try { card.setConfig(e.detail.config); document.title = "editor→card OK"; }
+        catch (err) { document.title = "ERR: " + err.message; }
+      });
+      const host = document.createElement("div");
+      host.id = "editorhost";
+      host.style.cssText = "max-width:820px;margin:16px auto;background:#fff;border-radius:8px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.12)";
+      host.appendChild(editor);
+      document.body.appendChild(host);
+    });
+  </script>
+</body>
+</html>

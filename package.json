@@ -1,0 +1,21 @@
+{
+  "name": "ha-fan-card",
+  "version": "1.0.0",
+  "description": "Home Assistant card showing noctuas: fans whose blades spin at the real rotation rate from a Hz sensor entity.",
+  "type": "module",
+  "scripts": {
+    "gen:svg": "node scripts/generate-fan-svg.mjs",
+    "build": "npm run gen:svg && esbuild src/fan-card.js --bundle --format=iife --global-name=FanCard --outfile=dist/fan-card.js --minify",
+    "build:dev": "npm run gen:svg && esbuild src/fan-card.js --bundle --format=iife --global-name=FanCard --outfile=dist/fan-card.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "lit": "^3.2.0",
+    "puppeteer": "^25.18.1"
+  },
+  "license": "MIT",
+  "allowScripts": {
+    "esbuild@0.24.2": true,
+    "puppeteer@25.18.1": true
+  }
+}

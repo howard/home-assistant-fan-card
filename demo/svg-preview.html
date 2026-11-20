@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>fan-svg preview</title>
+  <style>
+    body { background: #efefe4; display: grid; grid-template-columns: repeat(4, auto); gap: 24px; padding: 24px; }
+    svg { width: 160px; height: 160px; }
+  </style>
+</head>
+<body>
+  <script type="module">
+    import { FAN_SVG } from "../src/fan-svg.js";
+    for (let i = 0; i < 8; i++) {
+      const d = document.createElement("div");
+      d.innerHTML = FAN_SVG;
+      document.body.appendChild(d.firstElementChild);
+    }
+  </script>
+</body>
+</html>
