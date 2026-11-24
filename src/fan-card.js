@@ -33,6 +33,9 @@ class FanCard extends LitElement {
       border-radius: 10px;
       padding: 6px;
       box-sizing: border-box;
+      /* Allow shrinking below content size (WebKit keeps the SVG's intrinsic
+         ~300px as the grid auto-minimum, which would overflow the row). */
+      min-width: 0;
     }
     .fan.problem {
       border-color: #ef5350;
@@ -43,6 +46,7 @@ class FanCard extends LitElement {
     }
     .svg-wrapper svg {
       width: 100%;
+      max-width: 100%;
       height: auto;
       display: block;
     }
@@ -111,10 +115,14 @@ class FanCard extends LitElement {
     const fans = this.config.fans.map((fan) => this._renderFan(fan));
     for (let i = 0; i < fans.length; i += perRow) {
       rows.push(
-        html`<div class="row" style="grid-template-columns: repeat(${Math.min(
-          perRow,
-          fans.length - i
-        )}, 1fr)">${fans.slice(i, i + perRow)}</div>`
+        html`<div
+          class="row"
+          style="grid-template-columns: repeat(${Math.min(
+            perRow,
+            fans.length - i
+          )}, minmax(0, 1fr))"
+          >${fans.slice(i, i + perRow)}</div
+        >`
       );
     }
     return html`${rows}`;
