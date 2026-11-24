@@ -31,11 +31,11 @@ fan highlights the fan with a red border when it reports a problem.
 
 ### Manual
 
-Copy `dist/fan-card.js` into your `config/www/` directory and add a
+Copy `dist/ha-fan-card.js` into your `config/www/` directory and add a
 resource reference via **Settings → Dashboards → Resources**:
 
 ```
-/local/fan-card.js
+/local/ha-fan-card.js
 ```
 
 Then add the card to any dashboard.
@@ -79,7 +79,7 @@ enough to look alive while individual blades remain discernible.
 
 ```bash
 npm install
-npm run build        # regenerate SVG + bundle to dist/fan-card.js
+npm run build        # regenerate SVG + bundle to dist/ha-fan-card.js
 npm run build:dev    # unminified bundle
 ```
 

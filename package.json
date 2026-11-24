@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "gen:svg": "node scripts/generate-fan-svg.mjs",
-    "build": "npm run gen:svg && esbuild src/fan-card.js --bundle --format=iife --global-name=FanCard --outfile=dist/fan-card.js --minify",
-    "build:dev": "npm run gen:svg && esbuild src/fan-card.js --bundle --format=iife --global-name=FanCard --outfile=dist/fan-card.js"
+    "build": "npm run gen:svg && esbuild src/fan-card.js --bundle --format=iife --global-name=FanCard --outfile=dist/ha-fan-card.js --minify",
+    "build:dev": "npm run gen:svg && esbuild src/fan-card.js --bundle --format=iife --global-name=FanCard --outfile=dist/ha-fan-card.js"
   },
   "devDependencies": {
     "esbuild": "^0.24.0",

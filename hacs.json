@@ -1,6 +1,6 @@
 {
   "name": "Fan Card (Hz)",
-  "filename": "dist/fan-card.js",
-  "render_readme": true,
-  "category": "plugin"
+  "filename": "ha-fan-card.js",
+  "category": "plugin",
+  "render_readme": true
 }
